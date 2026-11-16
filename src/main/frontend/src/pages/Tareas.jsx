@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 
-import { obtenerTareasDisponibles } from "../services/tareaService";
+import { obtenerTareasDisponibles } from "../services/tareasService";
 import { reservarTarea } from "../services/reservaService";
 
 import TarjetaTarea from "../components/TarjetaTarea";
