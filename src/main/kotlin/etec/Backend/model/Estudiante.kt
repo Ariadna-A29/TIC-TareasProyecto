@@ -16,5 +16,9 @@ class Estudiante(
     var apellido: String = "",
 
     @Column(nullable = false, unique = true)
-    var email: String = ""
+    var email: String = "",
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grupo_id", nullable = false)
+    var grupo: Grupo? = null
 )
