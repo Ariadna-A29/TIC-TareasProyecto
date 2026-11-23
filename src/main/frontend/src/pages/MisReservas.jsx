@@ -1,60 +1,72 @@
 
-import { useEffect, useState } from "react";
-
-import {
-  obtenerReservas,
-  entregarTarea
-} from "../services/reservaService";
-
-import TarjetaReserva from "../components/TarjetaReserva";
-
-function MisReservas() {
-  const [reservas, setReservas] = useState([]);
-  const [error, setError] = useState("");
-
-  // ID de ejemplo para realizar las pruebas.
-  const grupoId = 1;
-
-  async function cargarReservas() {
-    try {
-      const datos = await obtenerReservas(grupoId);
-      setReservas(datos);
-    } catch (error) {
-      setError(error.message);
-    }
+function MisReservas({
+  reservas,
+  tareas,
+  estudiantes,
+  grupos,
+  entregar
+}) {
+  function buscarTarea(id) {
+    return tareas.find((tarea) => tarea.id === id);
   }
 
-  useEffect(() => {
-    cargarReservas();
-  }, []);
+  function buscarEstudiante(id) {
+    return estudiantes.find((estudiante) => estudiante.id === id);
+  }
 
-  async function entregar(id) {
-    try {
-      await entregarTarea(id);
-      await cargarReservas();
-    } catch (error) {
-      setError(error.message);
-    }
+  function buscarGrupo(id) {
+    return grupos.find((grupo) => grupo.id === id);
   }
 
   return (
-    <section>
+    <section className="contenido">
       <h1>Mis reservas</h1>
-
-      {error && <p className="error">{error}</p>}
+      <p>Reservas realizadas por los estudiantes.</p>
 
       <div className="tarjetas">
-        {reservas.map((reserva) => (
-          <TarjetaReserva
-            key={reserva.id}
-            reserva={reserva}
-            entregar={entregar}
-          />
-        ))}
+        {reservas.map((reserva) => {
+          const tarea = buscarTarea(reserva.tareaId);
+          const estudiante = buscarEstudiante(reserva.estudianteId);
+          const grupo = buscarGrupo(reserva.grupoId);
+
+          if (!tarea || !estudiante || !grupo) {
+            return null;
+          }
+
+          return (
+            <article className="tarjeta" key={reserva.id}>
+              <h3>{tarea.titulo}</h3>
+
+              <p>
+                <strong>Estudiante:</strong>{" "}
+                {estudiante.nombre} {estudiante.apellido}
+              </p>
+
+              <p>
+                <strong>Grupo:</strong> {grupo.nombre}
+              </p>
+
+              <p>
+                <strong>Estado:</strong> {reserva.estado}
+              </p>
+
+              <p>
+                <strong>Puntos máximos:</strong>{" "}
+                {tarea.puntosMaximos}
+              </p>
+
+              {reserva.estado === "RESERVADA" && (
+                <button onClick={() => entregar(reserva.id)}>
+                  Entregar tarea
+                </button>
+              )}
+            </article>
+          );
+        })}
       </div>
 
       {reservas.length === 0 && (
-        <p>El grupo todavía no tiene reservas.</p>
+        <p>Todavía no hay reservas.</p>
       )}
     </section>
   );

@@ -9,11 +9,19 @@ import etec.Backend.repository.TareaRepository
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 
+import etec.Backend.model.Profesor
+import etec.Backend.model.Reserva
+import etec.Backend.model.EstadoReserva
+import etec.Backend.repository.ProfesorRepository
+import etec.Backend.repository.ReservaRepository
+
 @Component
 class CargaInicial(
     private val estudianteRepository: EstudianteRepository,
     private val grupoRepository: GrupoRepository,
-    private val tareaRepository: TareaRepository
+    private val tareaRepository: TareaRepository,
+    private val profesorRepository: ProfesorRepository,
+    private val reservaRepository: ReservaRepository
 ) : CommandLineRunner {
 
     override fun run(args: Array<String>) {
@@ -164,6 +172,88 @@ class CargaInicial(
             )
 
             estudianteRepository.saveAll(estudiantes)
+
+            // Crear profesores
+            val profesoresIniciales = listOf(
+                Profesor(nombre = "Laura", apellido = "Sanchez"),
+                Profesor(nombre = "Martin", apellido = "Gonzalez")
+            )
+
+            val profesoresExistentes = profesorRepository.findAll()
+
+            profesoresIniciales.forEach { profesor ->
+                val existe = profesoresExistentes.any {
+                    it.nombre == profesor.nombre &&
+                    it.apellido == profesor.apellido
+                }
+
+                if (!existe) {
+                    profesorRepository.save(profesor)
+                }
+            }
+
+            // Crear algunas reservas
+            val gruposActuales = grupoRepository.findAll()
+                .associateBy { it.nombre }
+
+            val tareasActuales = tareaRepository.findAll()
+                .associateBy { it.titulo }
+
+            val reservasIniciales = listOf(
+                Triple(
+                    "Pixel Warriors",
+                    "Sistema de movimiento",
+                    EstadoReserva.RESERVADA
+                ),
+                Triple(
+                    "Pixel Warriors",
+                    "Sistema de salto",
+                    EstadoReserva.EN_PROGRESO
+                ),
+                Triple(
+                    "Game Masters",
+                    "Inventario",
+                    EstadoReserva.RESERVADA
+                ),
+                Triple(
+                    "Codigo Gamer",
+                    "Sistema de enemigos",
+                    EstadoReserva.ENTREGADA
+                ),
+                Triple(
+                    "Retro Players",
+                    "Sistema de puntuacion",
+                    EstadoReserva.CORRECCION
+                )
+            )
+
+            reservasIniciales.forEach { (nombreGrupo, tituloTarea, estado) ->
+
+                val grupo = gruposActuales[nombreGrupo]
+                    ?: error("No existe el grupo $nombreGrupo")
+
+                val tarea = tareasActuales[tituloTarea]
+                    ?: error("No existe la tarea $tituloTarea")
+
+                val yaExiste = reservaRepository
+                    .existsByGrupo_IdAndTarea_Id(
+                        grupo.id!!,
+                        tarea.id!!
+                    )
+
+                if (!yaExiste) {
+                    reservaRepository.save(
+                        Reserva(
+                            grupo = grupo,
+                            tarea = tarea,
+                            estado = estado
+                        )
+                    )
+                }
+            }
+
+            println("Carga inicial de TIC-Tareas finalizada.")
+
         }
 
         // Crear tareas

@@ -1,45 +1,52 @@
 
-import { useEffect, useState } from "react";
-import { obtenerEstudiantes } from "../services/estudianteService";
+function Estudiantes({ estudiantes, grupos, reservas }) {
+  function obtenerGrupo(grupoId) {
+    return grupos.find((grupo) => grupo.id === grupoId);
+  }
 
-function Estudiantes() {
-  const [estudiantes, setEstudiantes] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function cargar() {
-      try {
-        const datos = await obtenerEstudiantes();
-        setEstudiantes(datos);
-      } catch (error) {
-        setError(error.message);
-      }
-    }
-
-    cargar();
-  }, []);
+  function obtenerPuntos(estudianteId) {
+    return reservas
+      .filter(
+        (reserva) =>
+          reserva.estudianteId === estudianteId &&
+          reserva.puntosObtenidos !== null
+      )
+      .reduce(
+        (total, reserva) => total + reserva.puntosObtenidos,
+        0
+      );
+  }
 
   return (
-    <section>
+    <section className="contenido">
       <h1>Estudiantes</h1>
-
-      {error && <p className="error">{error}</p>}
+      <p>Listado de estudiantes y sus puntos obtenidos.</p>
 
       <div className="tarjetas">
-        {estudiantes.map((estudiante) => (
-          <article className="tarjeta" key={estudiante.id}>
-            <h3>
-              {estudiante.nombre} {estudiante.apellido}
-            </h3>
+        {estudiantes.map((estudiante) => {
+          const grupo = obtenerGrupo(estudiante.grupoId);
+          const puntos = obtenerPuntos(estudiante.id);
 
-            <p>{estudiante.email}</p>
-          </article>
-        ))}
+          return (
+            <article className="tarjeta" key={estudiante.id}>
+              <h3>
+                {estudiante.nombre} {estudiante.apellido}
+              </h3>
+
+              <p>{estudiante.email}</p>
+
+              <p>
+                <strong>Grupo:</strong>{" "}
+                {grupo ? grupo.nombre : "Sin grupo"}
+              </p>
+
+              <p>
+                <strong>Puntos obtenidos:</strong> {puntos}
+              </p>
+            </article>
+          );
+        })}
       </div>
-
-      {estudiantes.length === 0 && (
-        <p>No hay estudiantes registrados.</p>
-      )}
     </section>
   );
 }

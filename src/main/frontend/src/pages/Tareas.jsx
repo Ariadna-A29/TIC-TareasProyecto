@@ -1,55 +1,19 @@
 
-import { useEffect, useState } from "react";
-
-import { obtenerTareasDisponibles } from "../services/tareasService";
-import { reservarTarea } from "../services/reservaService";
-
 import TarjetaTarea from "../components/TarjetaTarea";
 
-function Tareas() {
-  const [tareas, setTareas] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState("");
-  const [mensaje, setMensaje] = useState("");
-
-  // ID de ejemplo. Luego se obtiene del usuario que inició sesión.
-  const grupoId = 1;
-
-  useEffect(() => {
-    async function cargar() {
-      try {
-        const datos = await obtenerTareasDisponibles();
-        setTareas(datos);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setCargando(false);
-      }
-    }
-
-    cargar();
-  }, []);
-
-  async function reservar(idTarea) {
-    try {
-      await reservarTarea(grupoId, idTarea);
-      setMensaje("La tarea fue reservada correctamente.");
-
-      const datos = await obtenerTareasDisponibles();
-      setTareas(datos);
-    } catch (error) {
-      setError(error.message);
-    }
-  }
-
-  if (cargando) return <p>Cargando tareas...</p>;
-
+function Tareas({ tareas, reservar }) {
   return (
-    <section>
-      <h1>Tareas disponibles</h1>
+    <section className="contenido">
+      <div className="encabezado-seccion">
+        <div>
+          <h1>Tareas del proyecto</h1>
+          <p>Actividades para desarrollar el videojuego.</p>
+        </div>
 
-      {mensaje && <p>{mensaje}</p>}
-      {error && <p className="error">{error}</p>}
+        <span className="contador">
+          {tareas.length} tareas
+        </span>
+      </div>
 
       <div className="tarjetas">
         {tareas.map((tarea) => (
@@ -60,10 +24,6 @@ function Tareas() {
           />
         ))}
       </div>
-
-      {tareas.length === 0 && (
-        <p>No hay tareas disponibles.</p>
-      )}
     </section>
   );
 }

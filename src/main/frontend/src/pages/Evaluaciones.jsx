@@ -1,87 +1,60 @@
 
-import { useEffect, useState } from "react";
-
-import { consultar, actualizar } from "../services/api";
-
-function Evaluaciones() {
-  const [reservas, setReservas] = useState([]);
-  const [error, setError] = useState("");
-  const [mensaje, setMensaje] = useState("");
-
-  async function cargarReservas() {
-    try {
-      const datos = await consultar("/reservas");
-      setReservas(datos);
-    } catch (error) {
-      setError(error.message);
-    }
-  }
-
-  useEffect(() => {
-    cargarReservas();
-  }, []);
-
-  async function evaluar(id, puntosMaximos) {
-    const puntos = Number(
-      prompt(`Ingresá los puntos (máximo ${puntosMaximos}):`)
-    );
-
-    if (!Number.isInteger(puntos)) {
-      setError("Ingresá un número entero de puntos.");
-      return;
-    }
-
-    const observacion = prompt("Escribí una observación:") || "";
-
-    const aprobada = window.confirm(
-      "¿Aprobás el trabajo?"
-    );
-
-    try {
-      await actualizar(`/reservas/${id}/evaluar`, {
-        puntos,
-        observacion,
-        aprobada
-      });
-
-      setMensaje("Evaluación guardada correctamente.");
-      setError("");
-      await cargarReservas();
-    } catch (error) {
-      setError(error.message);
-    }
-  }
+function Evaluaciones({ reservas, tareas, estudiantes }) {
+  const evaluaciones = reservas.filter(
+    (reserva) => reserva.estado !== "RESERVADA"
+  );
 
   return (
-    <section>
+    <section className="contenido">
       <h1>Evaluaciones</h1>
+      <p>Seguimiento del rendimiento de los estudiantes.</p>
 
-      {mensaje && <p>{mensaje}</p>}
-      {error && <p className="error">{error}</p>}
+      <div className="tarjetas">
+        {evaluaciones.map((reserva) => {
+          const tarea = tareas.find(
+            (item) => item.id === reserva.tareaId
+          );
 
-      {reservas
-        .filter((reserva) =>
-          ["ENTREGADA", "CORRECCION"].includes(reserva.estado)
-        )
-        .map((reserva) => (
-          <article className="tarjeta" key={reserva.id}>
-            <h3>{reserva.tarea.nombre}</h3>
+          const estudiante = estudiantes.find(
+            (item) => item.id === reserva.estudianteId
+          );
 
-            <p>Grupo: {reserva.grupo.nombre}</p>
-            <p>Estado: {reserva.estado}</p>
+          if (!tarea || !estudiante) {
+            return null;
+          }
 
-            <button
-              onClick={() =>
-                evaluar(
-                  reserva.id,
-                  reserva.tarea.puntosMaximos
-                )
-              }
-            >
-              Evaluar trabajo
-            </button>
-          </article>
-        ))}
+          return (
+            <article className="tarjeta" key={reserva.id}>
+              <h3>{tarea.titulo}</h3>
+
+              <p>
+                <strong>Estudiante:</strong>{" "}
+                {estudiante.nombre} {estudiante.apellido}
+              </p>
+
+              <p>
+                <strong>Estado:</strong> {reserva.estado}
+              </p>
+
+              <p>
+                <strong>Puntos obtenidos:</strong>{" "}
+                {reserva.puntosObtenidos !== null
+                  ? `${reserva.puntosObtenidos} / ${tarea.puntosMaximos}`
+                  : "Pendiente"}
+              </p>
+
+              <p>
+                <strong>Observación:</strong>{" "}
+                {reserva.observacion}
+              </p>
+            </article>
+          );
+        })}
+      </div>
+
+      {evaluaciones.length === 0 && (
+        <p>Todavía no hay evaluaciones.</p>
+      )}
     </section>
   );
 }
