@@ -1,5 +1,11 @@
 
-function Evaluaciones({ reservas, tareas, estudiantes }) {
+function Evaluaciones({
+  reservas,
+  tareas,
+  estudiantes,
+  perfil,
+  aprobarTarea
+}) {
   const evaluaciones = reservas.filter(
     (reserva) => reserva.estado !== "RESERVADA"
   );
@@ -23,6 +29,11 @@ function Evaluaciones({ reservas, tareas, estudiantes }) {
             return null;
           }
 
+          const puedeAprobar =
+            perfil === "profesor" &&
+            (reserva.estado === "ENTREGADA" ||
+              reserva.estado === "CORRECCION");
+
           return (
             <article className="tarjeta" key={reserva.id}>
               <h3>{tarea.titulo}</h3>
@@ -33,7 +44,16 @@ function Evaluaciones({ reservas, tareas, estudiantes }) {
               </p>
 
               <p>
-                <strong>Estado:</strong> {reserva.estado}
+                <strong>Estado:</strong>{" "}
+                <span
+                  className={
+                    reserva.estado === "APROBADA"
+                      ? "estado aprobada"
+                      : "estado"
+                  }
+                >
+                  {reserva.estado}
+                </span>
               </p>
 
               <p>
@@ -47,6 +67,20 @@ function Evaluaciones({ reservas, tareas, estudiantes }) {
                 <strong>Observación:</strong>{" "}
                 {reserva.observacion}
               </p>
+
+              {puedeAprobar && (
+                <button
+                  onClick={() => aprobarTarea(reserva.id)}
+                >
+                  Marcar como corregida y aprobada
+                </button>
+              )}
+
+              {reserva.estado === "APROBADA" && (
+                <p className="mensaje-exito">
+                  Esta tarea ya fue corregida y aprobada.
+                </p>
+              )}
             </article>
           );
         })}

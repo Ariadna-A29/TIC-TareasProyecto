@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 import Menu from "./components/Menu.jsx";
@@ -18,7 +17,15 @@ import {
 function App() {
   const [pagina, setPagina] = useState("inicio");
 
+  const [perfil, setPerfil] = useState("estudiante");
+
   const [reservas, setReservas] = useState(reservasDemo);
+
+  const tareasARevisar = reservas.filter(
+    (reserva) =>
+      reserva.estado === "ENTREGADA" ||
+      reserva.estado === "CORRECCION"
+  ).length;
 
   const [tareas, setTareas] = useState(() =>
     tareasDemo.map((tarea) => ({
@@ -29,7 +36,6 @@ function App() {
     }))
   );
 
-  // Reservar una tarea y asignarla a un estudiante.
   function reservarTarea(idTarea) {
     const tarea = tareas.find((item) => item.id === idTarea);
 
@@ -37,7 +43,6 @@ function App() {
       return;
     }
 
-    // Por ahora, las nuevas reservas se realizan para Pixel Warriors.
     const grupoId = 1;
 
     const estudiantesDelGrupo = estudiantesDemo.filter(
@@ -74,12 +79,25 @@ function App() {
     );
   }
 
-  // Simular la entrega de una tarea.
   function entregarTarea(idReserva) {
     setReservas((actuales) =>
       actuales.map((reserva) =>
         reserva.id === idReserva
           ? { ...reserva, estado: "ENTREGADA" }
+          : reserva
+      )
+    );
+  }
+
+  function aprobarTarea(idReserva) {
+    setReservas((actuales) =>
+      actuales.map((reserva) =>
+        reserva.id === idReserva
+          ? {
+              ...reserva,
+              estado: "APROBADA",
+              observacion: "Tarea corregida y aprobada por el profesor."
+            }
           : reserva
       )
     );
@@ -106,14 +124,16 @@ function App() {
           />
         );
 
-      case "evaluaciones":
-        return (
-          <Evaluaciones
-            reservas={reservas}
-            tareas={tareasDemo}
-            estudiantes={estudiantesDemo}
-          />
-        );
+        case "evaluaciones":
+          return (
+            <Evaluaciones
+              reservas={reservas}
+              tareas={tareasDemo}
+              estudiantes={estudiantesDemo}
+              perfil={perfil}
+              aprobarTarea={aprobarTarea}
+            />
+          );
 
       case "estudiantes":
         return (
@@ -125,13 +145,24 @@ function App() {
         );
 
       default:
-        return <Inicio cambiarPagina={setPagina} />;
+        return (
+          <Inicio
+            cambiarPagina={setPagina}
+            perfil={perfil}
+            reservas={reservas}
+          />
+        );
     }
   }
 
   return (
     <div className="app">
-      <Menu cambiarPagina={setPagina} />
+      <Menu
+        cambiarPagina={setPagina}
+        pagina={pagina}
+        perfil={perfil}
+        cambiarPerfil={setPerfil}
+      />
       <main>{mostrarPagina()}</main>
     </div>
   );
